@@ -10,8 +10,17 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-three/fiber": "^8.16.3",
+    "expo": ">=51.0.0-0 <52.0.0",
+    "expo-asset": "~10.0.5",
+    "expo-file-system": "~17.0.1",
+    "expo-gl": "~14.0.2",
+    "expo-three": "^7.0.1",
     "react": "18.2.0",
-    "react-native": "0.74.1"
+    "react-native": "0.74.1",
+    "react-native-gesture-handler": "^2.16.1",
+    "react-native-reanimated": "^3.10.0",
+    "three": "^0.164.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

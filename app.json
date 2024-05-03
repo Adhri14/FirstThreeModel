@@ -1,4 +1,7 @@
 {
   "name": "FirstThreeModel",
-  "displayName": "FirstThreeModel"
+  "displayName": "FirstThreeModel",
+  "plugins": [
+    "expo-asset"
+  ]
 }

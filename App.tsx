@@ -1,118 +1,87 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, {Suspense, useEffect, useLayoutEffect, useMemo, useRef} from "react";
+import {Canvas, RootState, useFrame, useLoader} from "@react-three/fiber/native";
+// @ts-ignore
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+// @ts-ignore
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
+import {TextureLoader} from "expo-three";
+import {THREE} from "expo-three";
+import {useAnimatedSensor, SensorType} from 'react-native-reanimated';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const Box = (props?: any) => {
+    const meshRef = useRef();
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+    // @ts-ignore
+    const [base, normal, rough] = useLoader(TextureLoader, [
+        require('./Airmax/textures/BaseColor.jpg'),
+        require('./Airmax/textures/Normal.jpg'),
+        require('./Airmax/textures/Roughness.png'),
+    ]);
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+    const buffermaterial = useLoader(THREE.FileLoader, require('./Airmax/shoe.mtl'));
+    const material = useMemo(() => {
+        return new MTLLoader().parse(THREE.LoaderUtils.decodeText(buffermaterial));
+    }, [buffermaterial]);
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+    const bufferObje = useLoader(THREE.FileLoader, require('./Airmax/shoe.obj'));
+    const newObj = new OBJLoader();
+    material.preload();
+    newObj.setMaterials(material);
+    const obj = useMemo(() => newObj.parse(THREE.LoaderUtils.decodeText(bufferObje)), [bufferObje]);
+
+    useLayoutEffect(() => {
+        obj.traverse((child?: any) => {
+            if (child instanceof THREE.Mesh) {
+                child.material.map = base;
+                child.material.normalMap = normal;
+                child.material.roughnessMap = rough;
+            }
+        });
+    }, [obj]);
+
+    useFrame((state, delta) => {
+        let { x, y, z } = props.animatedSensor.sensor.value;
+        x = ~~(x * 100) / 5000;
+        y = ~~(y * 100) / 5000;
+        // @ts-ignore
+        meshRef.current.rotation.x += x;
+        // @ts-ignore
+        meshRef.current.rotation.y += y;
+    })
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+      <mesh ref={meshRef} rotation={[1, 0, 0]}>
+          <primitive object={obj} scale={9} />
+      </mesh>
   );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+const App = () => {
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+    const onCreated = (state: RootState) => {
+        const _gl = state.gl.getContext()
+        const pixelStorei = _gl.pixelStorei.bind(_gl)
+        _gl.pixelStorei = function(...args: any) {
+            const [parameter] = args;
+            if (parameter === _gl.UNPACK_FLIP_Y_WEBGL) {
+                return pixelStorei(...args);
+            }
+        }
+    }
+
+    const animatedSensor = useAnimatedSensor(SensorType.GYROSCOPE, {
+        interval: 100,
+    });
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <Canvas onCreated={onCreated}>
+          <ambientLight intensity={4} />
+          <pointLight position={[10, 10, 10]} />
+          <Suspense fallback={null}>
+              <Box animatedSensor={animatedSensor} />
+          </Suspense>
+      </Canvas>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
