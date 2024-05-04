@@ -1,11 +1,10 @@
-import React, {Suspense, useEffect, useLayoutEffect, useMemo, useRef} from "react";
+import React, {Suspense, useLayoutEffect, useMemo, useRef} from "react";
 import {Canvas, RootState, useFrame, useLoader} from "@react-three/fiber/native";
 // @ts-ignore
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 // @ts-ignore
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
-import {TextureLoader} from "expo-three";
-import {THREE} from "expo-three";
+import {TextureLoader, THREE} from "expo-three";
 import {useAnimatedSensor, SensorType} from 'react-native-reanimated';
 
 const Box = (props?: any) => {
@@ -18,16 +17,16 @@ const Box = (props?: any) => {
         require('./Airmax/textures/Roughness.png'),
     ]);
 
-    const buffermaterial = useLoader(THREE.FileLoader, require('./Airmax/shoe.mtl'));
+    const bufferMaterial = useLoader(THREE.FileLoader, require('./Airmax/shoe.mtl'));
     const material = useMemo(() => {
-        return new MTLLoader().parse(THREE.LoaderUtils.decodeText(buffermaterial));
-    }, [buffermaterial]);
+        return new MTLLoader().parse(THREE.LoaderUtils.decodeText(bufferMaterial));
+    }, [bufferMaterial]);
 
-    const bufferObje = useLoader(THREE.FileLoader, require('./Airmax/shoe.obj'));
+    const bufferObj = useLoader(THREE.FileLoader, require('./Airmax/shoe.obj'));
     const newObj = new OBJLoader();
     material.preload();
     newObj.setMaterials(material);
-    const obj = useMemo(() => newObj.parse(THREE.LoaderUtils.decodeText(bufferObje)), [bufferObje]);
+    const obj = useMemo(() => newObj.parse(THREE.LoaderUtils.decodeText(bufferObj)), [bufferObj]);
 
     useLayoutEffect(() => {
         obj.traverse((child?: any) => {
@@ -49,11 +48,11 @@ const Box = (props?: any) => {
         meshRef.current.rotation.y += y;
     })
 
-  return (
-      <mesh ref={meshRef} rotation={[1, 0, 0]}>
-          <primitive object={obj} scale={9} />
-      </mesh>
-  );
+    return (
+        <mesh ref={meshRef} rotation={[1, 0, 0]}>
+            <primitive object={obj} scale={9} />
+        </mesh>
+    );
 }
 
 const App = () => {
@@ -73,15 +72,15 @@ const App = () => {
         interval: 100,
     });
 
-  return (
-      <Canvas onCreated={onCreated}>
-          <ambientLight intensity={4} />
-          <pointLight position={[10, 10, 10]} />
-          <Suspense fallback={null}>
-              <Box animatedSensor={animatedSensor} />
-          </Suspense>
-      </Canvas>
-  );
+    return (
+        <Canvas onCreated={onCreated}>
+            <ambientLight intensity={4} />
+            <pointLight position={[10, 10, 10]} />
+            <Suspense fallback={null}>
+                <Box animatedSensor={animatedSensor} />
+            </Suspense>
+        </Canvas>
+    );
 }
 
 export default App;
